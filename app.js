@@ -1,8 +1,5 @@
-// Inicialização do banco de dados com Dexie.js
-const db = new Dexie('GestorOrcamentoFamiliarDB');
-db.version(1).stores({
-    transacoes: '++id, tipo, data, valor, categoria, descricao'
-});
+// Importar módulos
+import { db, sincronizarDados, restaurarDados } from './db.js';
 
 // Elementos do DOM
 const formularioTransacao = document.getElementById('formulario-transacao');
@@ -26,15 +23,37 @@ dataTransacao.valueAsDate = new Date();
 let graficoSemanal;
 let graficoMensal;
 
+// Registrar Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => console.log('Service Worker registrado'))
+            .catch(erro => console.error('Erro ao registrar Service Worker:', erro));
+    });
+}
+
 // Inicialização
 document.addEventListener('DOMContentLoaded', async () => {
-    await atualizarPainel();
-    iniciarGraficos();
-    
-    // Adicionar listeners para os filtros
-    filtroTodas.addEventListener('click', () => aplicarFiltro('todas'));
-    filtroReceitas.addEventListener('click', () => aplicarFiltro('receita'));
-    filtroDespesas.addEventListener('click', () => aplicarFiltro('despesa'));
+    try {
+        // Restaurar dados do backup local
+        await restaurarDados();
+        await atualizarPainel();
+        
+        // Lazy loading dos gráficos
+        setTimeout(() => {
+            iniciarGraficos();
+        }, 1000);
+        
+        // Adicionar listeners para os filtros
+        filtroTodas.addEventListener('click', () => aplicarFiltro('todas'));
+        filtroReceitas.addEventListener('click', () => aplicarFiltro('receita'));
+        filtroDespesas.addEventListener('click', () => aplicarFiltro('despesa'));
+        
+        // Sincronizar dados antes de fechar a página
+        window.addEventListener('beforeunload', sincronizarDados);
+    } catch (erro) {
+        console.error('Erro na inicialização:', erro);
+    }
 });
 
 // Adicionar nova transação
