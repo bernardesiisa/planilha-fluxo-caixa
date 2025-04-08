@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Orçamento Familiar</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">Planilha Fluxo de Caixa</h1>
+        
+        <!-- Formulário para adicionar transações -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h2 class="card-title h5 mb-0">Nova Transação</h2>
+            </div>
+            <div class="card-body">
+                <form id="formulario-transacao">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="tipo-transacao" class="form-label">Tipo</label>
+                            <select id="tipo-transacao" class="form-select" required>
+                                <option value="">Selecione...</option>
+                                <option value="receita">Receita</option>
+                                <option value="despesa">Despesa</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="data-transacao" class="form-label">Data</label>
+                            <input type="date" id="data-transacao" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="valor-transacao" class="form-label">Valor (€)</label>
+                            <input type="number" id="valor-transacao" class="form-control" step="0.01" min="0.01" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="categoria-transacao" class="form-label">Categoria</label>
+                            <select id="categoria-transacao" class="form-select" required>
+                                <option value="">Selecione...</option>
+                                <optgroup label="Receitas">
+                                    <option value="Salário">Salário</option>
+                                    <option value="Bónus">Bónus</option>
+                                    <option value="Investimentos">Investimentos</option>
+                                    <option value="Outras Receitas">Outras Receitas</option>
+                                </optgroup>
+                                <optgroup label="Despesas">
+                                    <option value="Alimentação">Alimentação</option>
+                                    <option value="Habitação">Habitação</option>
+                                    <option value="Transportes">Transportes</option>
+                                    <option value="Saúde">Saúde</option>
+                                    <option value="Educação">Educação</option>
+                                    <option value="Lazer">Lazer</option>
+                                    <option value="Outras Despesas">Outras Despesas</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="descricao-transacao" class="form-label">Descrição</label>
+                        <textarea id="descricao-transacao" class="form-control" rows="2"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Adicionar</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Resumo financeiro -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card text-white bg-success">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Receitas</h5>
+                        <p class="card-text h3" id="total-receitas">€ 0,00</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-danger">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Despesas</h5>
+                        <p class="card-text h3" id="total-despesas">€ 0,00</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-primary">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Saldo</h5>
+                        <p class="card-text h3" id="saldo">€ 0,00</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gráficos -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h2 class="card-title h5 mb-0">Progresso Semanal</h2>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="grafico-semanal"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h2 class="card-title h5 mb-0">Progresso Mensal</h2>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="grafico-mensal"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Lista de transações -->
+        <div class="card">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h2 class="card-title h5 mb-0">Histórico de Transações</h2>
+                <div class="btn-group">
+                    <button id="filtro-todas" class="btn btn-sm btn-outline-primary active">Todas</button>
+                    <button id="filtro-receitas" class="btn btn-sm btn-outline-success">Receitas</button>
+                    <button id="filtro-despesas" class="btn btn-sm btn-outline-danger">Despesas</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Tipo</th>
+                                <th>Categoria</th>
+                                <th>Descrição</th>
+                                <th>Valor</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-transacoes">
+                            <!-- Transações serão adicionadas aqui dinamicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Dicas para principiantes -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h2 class="card-title h5 mb-0">Dicas para Gerir o Seu Orçamento</h2>
+            </div>
+            <div class="card-body">
+                <ul>
+                    <li>Registe todas as suas receitas e despesas regularmente.</li>
+                    <li>Categorize corretamente cada transação para melhor análise.</li>
+                    <li>Verifique os gráficos semanais e mensais para entender os seus padrões de gastos.</li>
+                    <li>Tente manter um saldo positivo, com receitas superiores às despesas.</li>
+                    <li>Utilize os filtros para analisar apenas receitas ou despesas quando necessário.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dexie@3.2.3/dist/dexie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
